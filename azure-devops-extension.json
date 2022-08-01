@@ -1,0 +1,35 @@
+{
+    "manifestVersion": 1,
+    "id": "quickassign",
+    "publisher": "jarhughe",
+    "version": "1.0.0",
+    "name": "Microsoft QuickASsign",
+    "description": "Azure DevOps Extension to simplify the process of assigning the Onboarding Activity work item type",
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],
+    "icons": {
+        "default": "logo.png"
+    },
+    "content": {
+        "details": {
+            "path": "overview.md"
+        }
+    },
+    "files": [
+        {
+            "path": "static",
+            "addressable": true
+        },
+        {
+            "path": "dist",
+            "addressable": true
+        }
+    ],
+    "categories": [
+        "Azure Boards"
+    ]
+}
+        
