@@ -1,4 +1,4 @@
-import { IdentityRef } from "azure-devops-extension-api/WebApi";
+import { IdentityRef, TeamMember } from "azure-devops-extension-api/WebApi";
 import { ISimpleListCell } from "azure-devops-ui/List";
 import {
   ColumnMore,
@@ -19,17 +19,19 @@ import {
   WorkItemTrackingServiceIds,
 } from "azure-devops-extension-api/WorkItemTracking";
 import * as SDK from "azure-devops-extension-sdk";
+import { WorkItem } from "azure-devops-node-api/interfaces/WorkItemTrackingInterfaces";
 
-export interface ITableItem extends ISimpleListCell {
+export interface ITableItem extends ISimpleTableCell {
   displayName: string;
   descriptor: string;
-  isAssignedActivity: boolean;
-  linkItemInterface: WorkItemRelation[] 
+  isAssignedActivity: string;
+  // linkItemInterface: WorkItemRelation[] 
 }
 
 export interface IUserItem<T = {}> {
-    identity: IdentityRef
-    name: string
+    identity: TeamMember;
+    isAssignedActivity: string;
+    //linkItemInterface?: WorkItemRelation[] 
 }
 
 export const fixedColumns = [
@@ -50,8 +52,43 @@ export const fixedColumns = [
   // })
 ];
 
+interface IWorkItemExtended extends WorkItem {
+  item: WorkItem;
+  assignedToUniqueName: string;
+}
+
+interface ExtensionConfigs {
+  group: string;
+  type: string;
+}
+
 let usersInGroup = retrieveUsers();
 let childActivities = retrieveChildItems();
+let findAssignmentOfUsers = determineAssignmentOfUsers();
+
+async function determineAssignmentOfUsers(){
+const AllUsers = (await usersInGroup)
+const AllActivities = (await childActivities)
+let placeholder = new Array<IUserItem>();
+for (let user of AllUsers) {
+  //determine if already assigned
+  let matched = AllActivities?.find((i) => i.assignedToUniqueName === user.identity.uniqueName)?.assignedToUniqueName || ""
+  if (matched) {
+    // const linkInterfaceItem : WorkItemRelation[] =
+    // [
+    //   {
+    //   rel: "Parent",
+    //   url: this.state.ItemSelectedURLForLinking,
+    //   attributes: [""]
+    //   }
+    // ]
+    placeholder.push({"identity": user, "isAssignedActivity": "1"})
+  } else {
+    placeholder.push({"identity": user, "isAssignedActivity": "0"})
+  }
+}
+return placeholder
+}
 
 async function retrieveUsers(){
   const users = await getMembersOfTeam()
@@ -59,8 +96,8 @@ async function retrieveUsers(){
 }
 
 async function retrieveChildItems(){
-  const users = await getMembersOfTeam()
-  return users
+  const childItems = await getChildItems()
+  return childItems
 }
 
 async function getChildItems(){
@@ -69,7 +106,7 @@ async function getChildItems(){
   );
   // const organization = await SDK.getHost()
   // const project = await Project
-  let placeholder = new Array<ITableItem>()
+  let placeholder = new Array<IWorkItemExtended>()
   const client = getClient(WorkItemTrackingRestClient);
   let relations = await workItemFormService.getWorkItemRelations();
   for (let item of relations){
@@ -80,25 +117,38 @@ async function getChildItems(){
       matches = parseInt(item.url.match(/\d+$/)?.toString()||"")
       console.log(matches);
       client.getWorkItemTypeFieldsWithReferences
-      let workitem = client.getWorkItem(matches, undefined, undefined, new Date(), WorkItemExpand.Relations)
-      let assignedTo = (await workitem).fields["System.AssignedTo"]
-      console.log(assignedTo)
-      return assignedTo
+      let workitemAsync = client.getWorkItem(matches, undefined, undefined, new Date(), WorkItemExpand.Relations)
+      let workitem = (await workitemAsync)
+      let assignedToUniqueName = workitem.fields["System.AssignedTo"];
+      placeholder.push({"item": workitem, assignedToUniqueName: assignedToUniqueName.uniqueName})
+      // let assignedTo = (await workitem).fields["System.AssignedTo"]
+      // //console.log("HERE IS THE ASSIGNED TO: " + assignedTo)
+      return placeholder
 }
 }
 }
 
 export const usersAssigned = usersInGroup
 export const getChildItems1 = childActivities
+export const userAssignments = findAssignmentOfUsers
+
 
  async function getMembersOfTeam(){
   const client = getClient(CoreRestClient)
-  let users = await client.getTeamMembersWithExtendedProperties("Master Template","My Test Team")
+  const groupName =  await SDK.init().then( () =>SDK.getConfiguration().witInputs["GroupName"]);
+  let users = await client.getTeamMembersWithExtendedProperties("Master Template", groupName)
   return users
 }
 function createColumnSelect<T>(): ITableColumn<T> {
   /* workaround incompatible types */
   return new ColumnSelect() as unknown as ITableColumn<T>
+}
+
+async function retrieveConfigs(){
+  const columnType =  await SDK.init().then( () =>SDK.getConfiguration().witInputs["ColumnType"]);
+  const groupName =  await SDK.init().then( () =>SDK.getConfiguration().witInputs["GroupName"]);
+  const config: ExtensionConfigs = {group: groupName, type: columnType}
+  return config
 }
   
   export const MSStoryData: IUserItem[] = [

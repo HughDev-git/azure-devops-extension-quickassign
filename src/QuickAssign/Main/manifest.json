@@ -19,7 +19,16 @@
                             "dataType": "String",
                             "isRequired": true
                         }
+                    },
+                    {
+                        "id": "ColumnType",
+                        "name": "For this extension, enter the subset of users you want to show in the list. Options are ASSIGNED and NOT ASSIGNED.",
+                        "validation": {
+                            "dataType": "String",
+                            "isRequired": true
+                        }
                     }
+
                 ]
             }
         }
