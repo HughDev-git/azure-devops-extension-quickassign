@@ -106,8 +106,21 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
 
   public async assignSelectedUsers(){
     let selectedItems = this.selection.value
+    let a = this.selection.value[0].beginIndex
+    // console.log(this.selection)
     for (let i of selectedItems){
-        let item = this.selection.value[i.beginIndex].
+      
+      //there is only a single item
+       if (i.beginIndex == i.endIndex){
+        console.log("A selected Users Display Name is:  " + this.state.UsersNotAssigned.value[i.beginIndex].displayName)
+       } else {
+        //we must loop through each item as more than one item was selected
+        let counter = i.beginIndex
+          do {
+            console.log("A selected Users Display Name is:  " + this.state.UsersNotAssigned.value[counter].displayName)
+            counter++
+          } while (counter <= i.endIndex);
+        }
     }
   }
 
