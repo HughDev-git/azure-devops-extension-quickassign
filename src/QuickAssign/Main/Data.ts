@@ -25,6 +25,7 @@ export interface ITableItem extends ISimpleTableCell {
   displayName: string;
   descriptor: string;
   isAssignedActivity: string;
+  uniqueName: string;
   // linkItemInterface: WorkItemRelation[] 
 }
 

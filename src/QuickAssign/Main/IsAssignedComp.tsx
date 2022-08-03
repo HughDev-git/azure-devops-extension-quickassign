@@ -110,9 +110,9 @@ export class QuickAssignComponent1 extends React.Component<{}, MyStates> {
     const users = (await userAssignments)
     for (let user of users) {
       if(user.isAssignedActivity == "1"){
-        usersassignedplaceholder.push({ "displayName": user.identity.identity.displayName, "descriptor": user.identity.identity.descriptor, "isAssignedActivity": user.isAssignedActivity})
+        usersassignedplaceholder.push({ "displayName": user.identity.identity.displayName, "uniqueName": user.identity.identity.uniqueName, "descriptor": user.identity.identity.descriptor, "isAssignedActivity": user.isAssignedActivity})
       } else {
-        usersnotassignedplaceholder.push({ "displayName": user.identity.identity.displayName, "descriptor": user.identity.identity.descriptor, "isAssignedActivity": user.isAssignedActivity})
+        usersnotassignedplaceholder.push({ "displayName": user.identity.identity.displayName, "uniqueName": user.identity.identity.uniqueName, "descriptor": user.identity.identity.descriptor, "isAssignedActivity": user.isAssignedActivity})
       }
     
     }
