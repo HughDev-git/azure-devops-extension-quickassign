@@ -43,7 +43,7 @@ interface MyStates {
   IsRenderReady: boolean;
   UsersNotAssigned: ArrayItemProvider<ITableItem>
   UsersAssigned: ArrayItemProvider<ITableItem>
-  reRender: number
+  // reRender: number
 }
 
 
@@ -57,7 +57,7 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
        IsRenderReady: false,
        UsersNotAssigned: new ArrayItemProvider<ITableItem>([]),
        UsersAssigned: new ArrayItemProvider<ITableItem>([]),
-       reRender: 0
+      //  reRender: 0
      };
   }
 
@@ -106,9 +106,12 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
     });
   }
 
+  public updateLists(){
+    console.log("We are in updateList function");
+  }
+
   public async assignSelectedUsers(){
     let selectedItems = this.selection.value
-    // let a = this.selection.value[0].beginIndex
     const workItemFormService = await SDK.getService<IWorkItemFormService>(
       WorkItemTrackingServiceIds.WorkItemFormService
     )
@@ -134,32 +137,49 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
     } else {
       newTitle = osTitle
     }
-    // console.log(this.selection)
     for (let i of selectedItems){
-      
       //there is only a single item
        if (i.beginIndex == i.endIndex){
         console.log("A selected Users Display Name is:  " + this.state.UsersNotAssigned.value[i.beginIndex].displayName)
         this.createWorkItem(client,project,newTitle, addlinkInterfaceItem,this.state.UsersNotAssigned.value[i.beginIndex]);
+        // usersnotassignedplaceholder.splice(i.beginIndex);
+        // usersassignedplaceholder.push({ "displayName": this.state.UsersNotAssigned.value[i.beginIndex].displayName, "uniqueName": this.state.UsersNotAssigned.value[i.beginIndex].uniqueName, "descriptor": this.state.UsersNotAssigned.value[i.beginIndex].descriptor, "isAssignedActivity": this.state.UsersNotAssigned.value[i.beginIndex].isAssignedActivity})
        } else {
         //we must loop through each item as more than one item was selected
         let counter = i.beginIndex
           do {
-            console.log("A selected Users Display Name is:  " + this.state.UsersNotAssigned.value[counter].displayName)
-            this.createWorkItem(client,project,newTitle,addlinkInterfaceItem,this.state.UsersNotAssigned.value[i.beginIndex]);
+            this.createWorkItem(client,project,newTitle,addlinkInterfaceItem,this.state.UsersNotAssigned.value[counter]);
+            // usersnotassignedplaceholder.splice(counter)
+            // usersassignedplaceholder.push({ "displayName": this.state.UsersNotAssigned.value[counter].displayName, "uniqueName": this.state.UsersNotAssigned.value[counter].uniqueName, "descriptor": this.state.UsersNotAssigned.value[counter].descriptor, "isAssignedActivity": this.state.UsersNotAssigned.value[counter].isAssignedActivity})
             counter++
           } while (counter <= i.endIndex);
         }
     }
-    let min = Math.ceil(1);
-    let max = Math.floor(9999);
-    let random = Math.floor(Math.random()* (max-min) + min)
-    this.setState({
-      reRender: random
-    });
+    let usersnotassignedplaceholder = new Array<ITableItem>();
+    let usersassignedplaceholder = new Array<ITableItem>();
+    const users = (await userAssignments)
+    for (let user of users) {
+      if(user.isAssignedActivity == "1"){
+        usersassignedplaceholder.push({ "displayName": user.identity.identity.displayName, "uniqueName": user.identity.identity.uniqueName, "descriptor": user.identity.identity.descriptor, "isAssignedActivity": user.isAssignedActivity})
+      } else {
+        usersnotassignedplaceholder.push({ "displayName": user.identity.identity.displayName, "uniqueName": user.identity.identity.uniqueName, "descriptor": user.identity.identity.descriptor, "isAssignedActivity": user.isAssignedActivity})
+    }
+    // let min = Math.ceil(1);
+    // let max = Math.floor(9999);
+    // let random = Math.floor(Math.random()* (max-min) + min)
+    // this.setState({
+    //   reRender: random
+    // });
   }
+  let arrayItemProvider0 = new ArrayItemProvider(usersnotassignedplaceholder)
+  let arrayItemProvider1 = new ArrayItemProvider(usersassignedplaceholder)
+  this.setState({
+    UsersNotAssigned: arrayItemProvider0,
+    UsersAssigned: arrayItemProvider1
+  });
+}
 
-  public async createWorkItem(client: WorkItemTrackingRestClient, project: IProjectInfo | undefined, newTitle: string | undefined, addlinkInterfaceItem: WorkItemRelation[], user: ITableItem | undefined){
+  public createWorkItem(client: WorkItemTrackingRestClient, project: IProjectInfo | undefined, newTitle: string | undefined, addlinkInterfaceItem: WorkItemRelation[], user: ITableItem | undefined){
     let distinctDisplayName = user?.displayName+"<"+user?.uniqueName+">"
     // let jsonPatchDoc = [  {"op": "test","path": "/rev","value": 3},{"op": "add","path":"/fields/System.Title","value":"HERE IS MY NEW TITLE"}]
     let jsonPatchDoc = [{"op": "add","path":"/fields/System.Title","value": newTitle},{"op": "add","path":"/fields/System.AssignedTo","value": distinctDisplayName},{"op": "add","path": "/relations/-","value": {"rel": addlinkInterfaceItem[0].rel,"url": addlinkInterfaceItem[0].url,"attributes": {"comment": "This item was linked from the QuickAssign Azure DevOps extension."}}}]
@@ -223,7 +243,7 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
             containerClassName="h-scroll-auto"
           />
         </Card>
-        {this.state.reRender == 0 ? this.state.reRender : ""}
+        {/* {this.state.reRender == 0 ? this.state.reRender : ""} */}
       </Page>
       </div>);} 
     else {

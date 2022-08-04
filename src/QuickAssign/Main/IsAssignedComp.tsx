@@ -60,23 +60,23 @@ export class QuickAssignComponent1 extends React.Component<{}, MyStates> {
   }
 
 
-  private commandBarItemsSimple: IHeaderCommandBarItem[] = [
-    {
-      iconProps: {
-        iconName: "Add"
-      },
-      id: "Assign",
-      isPrimary: true,
-      important: true,
-      onActivate: () => {
-        alert("This would normally trigger a modal popup");
-      },
-      text: "Assign",
-      tooltipProps: {
-        text: "Assign the selected resources this onboarding activity"
-      }
-    }
-  ];
+  // private commandBarItemsSimple: IHeaderCommandBarItem[] = [
+  //   {
+  //     iconProps: {
+  //       iconName: "Add"
+  //     },
+  //     id: "Assign",
+  //     isPrimary: true,
+  //     important: true,
+  //     onActivate: () => {
+  //       alert("This would normally trigger a modal popup");
+  //     },
+  //     text: "Assign",
+  //     tooltipProps: {
+  //       text: "Assign the selected resources this onboarding activity"
+  //     }
+  //   }
+  // ];
 
 
 
@@ -132,7 +132,7 @@ export class QuickAssignComponent1 extends React.Component<{}, MyStates> {
         <Page>
         <Header
         // title={"Header title"}
-         commandBarItems={this.commandBarItemsSimple}
+        //  commandBarItems={this.commandBarItemsSimple}
         // titleSize={TitleSize.Medium}
         // titleIconProps={{ iconName: "OpenSource" }}
         // titleAriaLevel={3}

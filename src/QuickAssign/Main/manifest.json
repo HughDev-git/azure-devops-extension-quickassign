@@ -10,7 +10,7 @@
             "properties": {
                 "name": "Microsoft QuickAssign",
                 "uri": "dist/Main/index.html",
-                "height": 300,
+                "height": 750,
                 "inputs": [
                     {
                         "id": "GroupName",

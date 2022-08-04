@@ -74,15 +74,8 @@ let placeholder = new Array<IUserItem>();
 for (let user of AllUsers) {
   //determine if already assigned
   let matched = AllActivities?.find((i) => i.assignedToUniqueName === user.identity.uniqueName)?.assignedToUniqueName || ""
+  console.log("Test Match HERE");
   if (matched) {
-    // const linkInterfaceItem : WorkItemRelation[] =
-    // [
-    //   {
-    //   rel: "Parent",
-    //   url: this.state.ItemSelectedURLForLinking,
-    //   attributes: [""]
-    //   }
-    // ]
     placeholder.push({"identity": user, "isAssignedActivity": "1"})
   } else {
     placeholder.push({"identity": user, "isAssignedActivity": "0"})
@@ -120,13 +113,14 @@ async function getChildItems(){
       client.getWorkItemTypeFieldsWithReferences
       let workitemAsync = client.getWorkItem(matches, undefined, undefined, new Date(), WorkItemExpand.Relations)
       let workitem = (await workitemAsync)
-      let assignedToUniqueName = workitem.fields["System.AssignedTo"];
-      placeholder.push({"item": workitem, assignedToUniqueName: assignedToUniqueName.uniqueName})
+      let assignedToUniqueName = workitem.fields["System.AssignedTo"].uniqueName;
+      console.log("HERE IS ASSIGNED TO UNIQUE NAME:  " + assignedToUniqueName)
+      placeholder.push({"item": workitem, assignedToUniqueName: assignedToUniqueName})
       // let assignedTo = (await workitem).fields["System.AssignedTo"]
       // //console.log("HERE IS THE ASSIGNED TO: " + assignedTo)
-      return placeholder
 }
 }
+return placeholder
 }
 
 export const usersAssigned = usersInGroup
