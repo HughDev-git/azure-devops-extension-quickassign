@@ -23,7 +23,8 @@ import { Observer } from "azure-devops-ui/Observer";
 import { ObservableValue } from "azure-devops-ui/Core/Observable";
 import {WorkItemTrackingRestClient} from "azure-devops-extension-api/WorkItemTracking/WorkItemTrackingClient";
 import { IWorkItemFieldChangedArgs, IWorkItemFormService, WorkItemTrackingServiceIds, WorkItemRelation } from "azure-devops-extension-api/WorkItemTracking";
-import { Link, Stack, StackItem, MessageBar, MessageBarType, ChoiceGroup, IStackProps, MessageBarButton, Text, IChoiceGroupStyles, ThemeProvider, initializeIcons, Dialog} from "@fluentui/react";
+import { Link, Stack, StackItem, MessageBar, MessageBarType, ChoiceGroup, IStackProps, MessageBarButton, Text, IChoiceGroupStyles, ThemeProvider, initializeIcons, ProgressIndicator} from "@fluentui/react";
+import { Status, Statuses, StatusSize } from "azure-devops-ui/Status";
 import { getClient, IProjectInfo } from "azure-devops-extension-api";
 import { Page } from "azure-devops-ui/Page";
 import { Header, TitleSize } from "azure-devops-ui/Header";
@@ -43,7 +44,10 @@ interface MyStates {
   IsRenderReady: boolean;
   UsersNotAssigned: ArrayItemProvider<ITableItem>
   UsersAssigned: ArrayItemProvider<ITableItem>
-  assigningDialog: boolean
+  assigningIndicator: boolean
+  currentUserAssignment: string
+  currentUserAssignmentID: number
+  assigningComplete: boolean
   // reRender: number
 }
 
@@ -56,9 +60,14 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
        IsRenderReady: false,
        UsersNotAssigned: new ArrayItemProvider<ITableItem>([]),
        UsersAssigned: new ArrayItemProvider<ITableItem>([]),
-       assigningDialog: false,
+       assigningIndicator: false,
+       currentUserAssignment: "",
+       currentUserAssignmentID: 0,
+       assigningComplete: false
       //  reRender: 0
      };
+
+    
   }
 
 
@@ -71,16 +80,19 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
       isPrimary: true,
       important: true,
       onActivate: () => {
-        this.assignSelectedUsers().then(() => setTimeout(function(){ window.location.reload(); }, 4000))
+        this.assignSelectedUsers().then(() => { 
+          this.updateLists()})
       },
-      text: "Assign",
-      tooltipProps: {
-        text: "Assign the selected resources this onboarding activity"
-      }
+      // onActivate: () => {
+      //   this.assignSelectedUsers()},
+      // text: "Assign",
+      // tooltipProps: {
+      //   text: "Assign the selected resources this onboarding activity"
+      // }
     }
   ];
 
-
+  // setTimeout(function(){ window.location.reload(); }, 4000)
 
   private selection = new ListSelection({
     selectOnFocus: false,
@@ -107,16 +119,15 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
   }
 
   public updateLists(){
-    console.log("We are in updateList function");
-  }
-
-  public rerenderNotAssigned(){
-
+    this.setState({
+      assigningIndicator: false,
+      assigningComplete: true
+    });
   }
 
   public async assignSelectedUsers(){
     this.setState({
-      assigningDialog: true,
+      assigningIndicator: true,
     });
     let selectedItems = this.selection.value
     const workItemFormService = await SDK.getService<IWorkItemFormService>(
@@ -144,18 +155,24 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
     } else {
       newTitle = osTitle
     }
+    
     for (let i of selectedItems){
       //there is only a single item
        if (i.beginIndex == i.endIndex){
-        console.log("A selected Users Display Name is:  " + this.state.UsersNotAssigned.value[i.beginIndex].displayName)
-        this.createWorkItem(client,project,newTitle, addlinkInterfaceItem,this.state.UsersNotAssigned.value[i.beginIndex]);
+        this.setState({
+          currentUserAssignment: this.state.UsersNotAssigned.value[i.beginIndex].displayName,
+        });
+        (await this.createWorkItem(client,project,newTitle, addlinkInterfaceItem,this.state.UsersNotAssigned.value[i.beginIndex]));
         // usersnotassignedplaceholder.splice(i.beginIndex);
         // usersassignedplaceholder.push({ "displayName": this.state.UsersNotAssigned.value[i.beginIndex].displayName, "uniqueName": this.state.UsersNotAssigned.value[i.beginIndex].uniqueName, "descriptor": this.state.UsersNotAssigned.value[i.beginIndex].descriptor, "isAssignedActivity": this.state.UsersNotAssigned.value[i.beginIndex].isAssignedActivity})
        } else {
         //we must loop through each item as more than one item was selected
         let counter = i.beginIndex
           do {
-            this.createWorkItem(client,project,newTitle,addlinkInterfaceItem,this.state.UsersNotAssigned.value[counter]);
+            this.setState({
+              currentUserAssignment: this.state.UsersNotAssigned.value[counter].displayName,
+            });
+            (await this.createWorkItem(client,project,newTitle,addlinkInterfaceItem,this.state.UsersNotAssigned.value[counter]));
             // usersnotassignedplaceholder.splice(counter)
             // usersassignedplaceholder.push({ "displayName": this.state.UsersNotAssigned.value[counter].displayName, "uniqueName": this.state.UsersNotAssigned.value[counter].uniqueName, "descriptor": this.state.UsersNotAssigned.value[counter].descriptor, "isAssignedActivity": this.state.UsersNotAssigned.value[counter].isAssignedActivity})
             counter++
@@ -164,7 +181,13 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
     }
 }
 
-  public createWorkItem(client: WorkItemTrackingRestClient, project: IProjectInfo | undefined, newTitle: string | undefined, addlinkInterfaceItem: WorkItemRelation[], user: ITableItem | undefined){
+public getRandomInt(min: number, max: number) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min) + min);
+}
+
+  public async createWorkItem(client: WorkItemTrackingRestClient, project: IProjectInfo | undefined, newTitle: string | undefined, addlinkInterfaceItem: WorkItemRelation[], user: ITableItem | undefined){
     let distinctDisplayName = user?.displayName+"<"+user?.uniqueName+">"
     // let jsonPatchDoc = [  {"op": "test","path": "/rev","value": 3},{"op": "add","path":"/fields/System.Title","value":"HERE IS MY NEW TITLE"}]
     let jsonPatchDoc = [{"op": "add","path":"/fields/System.Title","value": newTitle},{"op": "add","path":"/fields/System.AssignedTo","value": distinctDisplayName},{"op": "add","path": "/relations/-","value": {"rel": addlinkInterfaceItem[0].rel,"url": addlinkInterfaceItem[0].url,"attributes": {"comment": "This item was linked from the QuickAssign Azure DevOps extension."}}}]
@@ -177,11 +200,14 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
         // console.log(state)
         // if (state != "Yes - I fully meet this requirement" && state != "N/A - This requirement does not apply to me") {
         //   console.log("Resetting. This state is :  " + state)
-        client.createWorkItem
-          client.createWorkItem(jsonPatchDoc,project?.id || "","Onboarding Activity")
+        // client.createWorkItem
+        let createdItem = (await client.createWorkItem(jsonPatchDoc,project?.id || "","Onboarding Activity"))
+        setTimeout(function(){ console.log("Activity has been created. Item ID:  " + createdItem.id) }, this.getRandomInt(2000,5000))
+        //  let createdItem = (await client.createWorkItem(jsonPatchDoc,project?.id || "","Onboarding Activity"));
         }
 
   public async fetchAllJSONData(){
+    console.log("Entering fetch all JSON data")
     let usersnotassignedplaceholder = new Array<ITableItem>();
     let usersassignedplaceholder = new Array<ITableItem>();
     const users = (await userAssignments)
@@ -208,6 +234,14 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
     return (
       <div>
         <Page>
+        {this.state.assigningIndicator ? <ProgressIndicator label="DO NOT REFRESH. ASSIGNMENTS ARE IN PROGRESS" description={"Assigning To:  " + this.state.currentUserAssignment} /> : ""}
+        {this.state.assigningComplete?  <MessageBar
+            messageBarType={MessageBarType.success}
+            isMultiline={true}
+            dismissButtonAriaLabel="Close"
+            >
+            Good to go! Refresh this page to see the new assignments.
+            </MessageBar> : ""}
         <Header
         // title={"Header title"}
          commandBarItems={this.commandBarItemsSimple}
@@ -228,8 +262,7 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
             className="table-example"
             containerClassName="h-scroll-auto"
           />
-        </Card>
-        {/* {this.state.reRender == 0 ? this.state.reRender : ""} */}
+        </Card>    
       </Page>
       </div>
       );

@@ -10,6 +10,7 @@ import QuickAssignComponent1 from "./IsAssignedComp";
 interface MyStates {
   View: string;
   isRenderReady: boolean;
+  reRenderComponents: boolean;
 }
 
 export class Main extends React.Component<{}, MyStates>{
@@ -17,8 +18,10 @@ export class Main extends React.Component<{}, MyStates>{
     super(props);
     this.state = {
       View: "",
-      isRenderReady: false
+      isRenderReady: false,
+      reRenderComponents: false
     };
+    
   }
 
   public componentDidMount() {

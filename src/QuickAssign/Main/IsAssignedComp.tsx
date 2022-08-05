@@ -36,6 +36,7 @@ import {
   ISimpleTableCell
 } from "azure-devops-ui/Table";
 import { ISimpleListCell } from "azure-devops-ui/List";
+import {Main} from "./Main"
 
 
 
@@ -104,6 +105,8 @@ export class QuickAssignComponent1 extends React.Component<{}, MyStates> {
     });
   }
 
+  
+
   public async fetchAllJSONData(){
     let usersnotassignedplaceholder = new Array<ITableItem>();
     let usersassignedplaceholder = new Array<ITableItem>();
@@ -124,6 +127,10 @@ export class QuickAssignComponent1 extends React.Component<{}, MyStates> {
     });
   }
 
+  public rerender(){
+
+  }
+
 
   public render(): JSX.Element {
     if (this.state.IsRenderReady){
@@ -131,11 +138,6 @@ export class QuickAssignComponent1 extends React.Component<{}, MyStates> {
       <div>
         <Page>
         <Header
-        // title={"Header title"}
-        //  commandBarItems={this.commandBarItemsSimple}
-        // titleSize={TitleSize.Medium}
-        // titleIconProps={{ iconName: "OpenSource" }}
-        // titleAriaLevel={3}
         />
         <Card
           className="flex-grow bolt-table-card"

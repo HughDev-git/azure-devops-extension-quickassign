@@ -20,6 +20,7 @@ import {
 } from "azure-devops-extension-api/WorkItemTracking";
 import * as SDK from "azure-devops-extension-sdk";
 import { WorkItem } from "azure-devops-node-api/interfaces/WorkItemTrackingInterfaces";
+import {Project} from "./CurrentProject"
 
 export interface ITableItem extends ISimpleTableCell {
   displayName: string;
@@ -131,7 +132,8 @@ export const userAssignments = findAssignmentOfUsers
  async function getMembersOfTeam(){
   const client = getClient(CoreRestClient)
   const groupName =  await SDK.init().then( () =>SDK.getConfiguration().witInputs["GroupName"]);
-  let users = await client.getTeamMembersWithExtendedProperties("Master Template", groupName)
+  let project = await Project
+  let users = await client.getTeamMembersWithExtendedProperties(project?.name || "", groupName)
   return users
 }
 function createColumnSelect<T>(): ITableColumn<T> {
