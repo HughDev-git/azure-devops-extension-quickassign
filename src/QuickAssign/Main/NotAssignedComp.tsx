@@ -23,7 +23,7 @@ import { Observer } from "azure-devops-ui/Observer";
 import { ObservableValue } from "azure-devops-ui/Core/Observable";
 import {WorkItemTrackingRestClient} from "azure-devops-extension-api/WorkItemTracking/WorkItemTrackingClient";
 import { IWorkItemFieldChangedArgs, IWorkItemFormService, WorkItemTrackingServiceIds, WorkItemRelation } from "azure-devops-extension-api/WorkItemTracking";
-import { Link, Stack, StackItem, MessageBar, MessageBarType, ChoiceGroup, IStackProps, MessageBarButton, Text, IChoiceGroupStyles, ThemeProvider, initializeIcons } from "@fluentui/react";
+import { Link, Stack, StackItem, MessageBar, MessageBarType, ChoiceGroup, IStackProps, MessageBarButton, Text, IChoiceGroupStyles, ThemeProvider, initializeIcons, Dialog} from "@fluentui/react";
 import { getClient, IProjectInfo } from "azure-devops-extension-api";
 import { Page } from "azure-devops-ui/Page";
 import { Header, TitleSize } from "azure-devops-ui/Header";
@@ -43,10 +43,9 @@ interface MyStates {
   IsRenderReady: boolean;
   UsersNotAssigned: ArrayItemProvider<ITableItem>
   UsersAssigned: ArrayItemProvider<ITableItem>
+  assigningDialog: boolean
   // reRender: number
 }
-
-
 
 
 
@@ -57,6 +56,7 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
        IsRenderReady: false,
        UsersNotAssigned: new ArrayItemProvider<ITableItem>([]),
        UsersAssigned: new ArrayItemProvider<ITableItem>([]),
+       assigningDialog: false,
       //  reRender: 0
      };
   }
@@ -71,7 +71,7 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
       isPrimary: true,
       important: true,
       onActivate: () => {
-        this.assignSelectedUsers()
+        this.assignSelectedUsers().then(() => setTimeout(function(){ window.location.reload(); }, 4000))
       },
       text: "Assign",
       tooltipProps: {
@@ -110,7 +110,14 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
     console.log("We are in updateList function");
   }
 
+  public rerenderNotAssigned(){
+
+  }
+
   public async assignSelectedUsers(){
+    this.setState({
+      assigningDialog: true,
+    });
     let selectedItems = this.selection.value
     const workItemFormService = await SDK.getService<IWorkItemFormService>(
       WorkItemTrackingServiceIds.WorkItemFormService
@@ -155,28 +162,6 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
           } while (counter <= i.endIndex);
         }
     }
-    let usersnotassignedplaceholder = new Array<ITableItem>();
-    let usersassignedplaceholder = new Array<ITableItem>();
-    const users = (await userAssignments)
-    for (let user of users) {
-      if(user.isAssignedActivity == "1"){
-        usersassignedplaceholder.push({ "displayName": user.identity.identity.displayName, "uniqueName": user.identity.identity.uniqueName, "descriptor": user.identity.identity.descriptor, "isAssignedActivity": user.isAssignedActivity})
-      } else {
-        usersnotassignedplaceholder.push({ "displayName": user.identity.identity.displayName, "uniqueName": user.identity.identity.uniqueName, "descriptor": user.identity.identity.descriptor, "isAssignedActivity": user.isAssignedActivity})
-    }
-    // let min = Math.ceil(1);
-    // let max = Math.floor(9999);
-    // let random = Math.floor(Math.random()* (max-min) + min)
-    // this.setState({
-    //   reRender: random
-    // });
-  }
-  let arrayItemProvider0 = new ArrayItemProvider(usersnotassignedplaceholder)
-  let arrayItemProvider1 = new ArrayItemProvider(usersassignedplaceholder)
-  this.setState({
-    UsersNotAssigned: arrayItemProvider0,
-    UsersAssigned: arrayItemProvider1
-  });
 }
 
   public createWorkItem(client: WorkItemTrackingRestClient, project: IProjectInfo | undefined, newTitle: string | undefined, addlinkInterfaceItem: WorkItemRelation[], user: ITableItem | undefined){
@@ -215,6 +200,7 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
       UsersAssigned: arrayItemProvider1
     });
   }
+  
 
 
   public render(): JSX.Element {
@@ -245,43 +231,16 @@ export class QuickAssignComponent0 extends React.Component<{}, MyStates> {
         </Card>
         {/* {this.state.reRender == 0 ? this.state.reRender : ""} */}
       </Page>
-      </div>);} 
-    else {
+      </div>
+      );
+      }
       return (<div className="flex-row"></div>)
 
-    }
   }
 
 
-  // private renderRow = (
-  //   index: number,
-  //   item: ITaskItem,
-  //   details: IListItemDetails<ITaskItem>,
-  //   key?: string
-  // ): JSX.Element => {
-  //   return (
-  //     <ListItem
-  //       key={key || "list-item" + index}
-  //       index={index}
-  //       details={details}
-  //     >
-  //       <div className="list-example-row flex-row h-scroll-hidden">
-  //         <div
-  //           style={{ padding: "5px 0px" }}
-  //           className="flex-column h-scroll-hidden"
-  //         >
-  //           <span className="fontSizeMS font-size-ms text-ellipsis" style={{ paddingLeft: "5px" }}>
-  //             {item.title}
-  //           </span>
-  //           <span className="fontSizeMS font-size-ms text-ellipsis secondary-text" style={{ paddingLeft: "5px" }}>
-  //             {item.areapathshort}
-  //           </span>
-  //         </div>
-  //       </div>
-  //     </ListItem>
-  //   );
-  // };
-}
+  }
+
 
 export default QuickAssignComponent0;
 
